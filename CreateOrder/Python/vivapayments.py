@@ -24,10 +24,10 @@ class VivaPayments(object):
 
     # Production constants
     PRODUCTION_URL = 'https://www.vivapayments.com/api/'
-    PRODUCT_REDIRECT_URL = 'http://www.vivapayments.com/web/newtransaction.aspx?ref='
+    PRODUCTION_REDIRECT_URL = 'http://www.vivapayments.com/web/newtransaction.aspx?ref='
     
     def __init__(self,merchant_id=None,api_key=None,production=False):
-        self.url = VivaPayments.DEMO_URL if production == False else PRODUCT_REDIRECT_URL
+        self.url = self.PRODUCTION_URL if production else self.DEMO_URL
         self.merchant_id=merchant_id
         self.api_key=api_key
 
@@ -57,7 +57,7 @@ class VivaPayments(object):
    
     def get_redirect_url(self,order_code):
         """Returns the order code appended on the REDIRECT_URL_PREFIX"""
-        redirect_url = VivaPayments.DEMO_REDIRECT_URL if self.url == VivaPayments.DEMO_URL else VivaPayments.PRODUCT_REDIRET_URL
+        redirect_url = self.DEMO_REDIRECT_URL if self.url == self.DEMO_URL else self.PRODUCTION_REDIRECT_URL
         return redirect_url+str(order_code)
 
     ### UTILITY FUNCTIONS ###
