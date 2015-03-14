@@ -1,9 +1,19 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import print_function, unicode_literals
+
 import datetime
-import urllib2
-import urllib
-import base64
 import json
 import math
+from base64 import standard_b64encode
+
+try:
+    from urllib.request import Request, urlopen
+    from urllib.parse import urlencode
+except ImportError:  # Python 2
+    from urllib2 import Request, urlopen
+    from urllib import urlencode
+
 
 class VivaPayments(object):
     """VivaPayments API Wrapper"""
@@ -52,36 +62,40 @@ class VivaPayments(object):
 
     ### UTILITY FUNCTIONS ###
     def pack_data(self,arg_name,arg_val,kwargs):
-        return dict({arg_name:arg_val}.items() + kwargs.items())
+        data = {arg_name: arg_val}
+        data.update(kwargs)
+        return data
 
     def _grequest(self,request_method,url_suffix):
         # Construct request object
         request_url = self.url + url_suffix
-        request = urllib2.Request(request_url)
+        request = Request(request_url)
         
         # Request basic access authentication
-        base64string = base64.encodestring('%s:%s' % (self.merchant_id,self.api_key)).replace('\n', '')
+        base64string = standard_b64encode('{0}:{1}'.format(
+            self.merchant_id, self.api_key).encode()).decode().strip()
         request.add_header("Authorization", "Basic %s" % base64string)   
         
         # Set http request method
         request.get_method = lambda: request_method
-        response = urllib2.urlopen(request)
-        return self._decode(response.read())
+        response = urlopen(request)
+        return self._decode(response.read().decode())
 
     def _request(self,request_method,url_suffix,data):
         # Construct request object
-        data = urllib.urlencode(data)
+        data = urlencode(data).encode()
         request_url = self.url + url_suffix
-        request = urllib2.Request(request_url,data=data)
+        request = Request(request_url,data=data)
         
         # Request basic access authentication
-        base64string = base64.encodestring('%s:%s' % (self.merchant_id,self.api_key)).replace('\n', '')
+        base64string = standard_b64encode('{0}:{1}'.format(
+            self.merchant_id, self.api_key).encode()).decode().strip()
         request.add_header("Authorization", "Basic %s" % base64string)   
         
         # Set http request method
         request.get_method = lambda: request_method
-        response = urllib2.urlopen(request)
-        return self._decode(response.read())
+        response = urlopen(request)
+        return self._decode(response.read().decode())
 
     def _decode(self,json_response):
         obj = json.loads(json_response)
@@ -120,12 +134,12 @@ if __name__ == '__main__':
     redirect_url = viva_payments.get_redirect_url(order_code)
 
     # Get the redirect url and paste it at your browser
-    print redirect_url
+    print(redirect_url)
 
     # Example 2
     # Cancel Transaction
 
     result = viva_payments.cancel_transaction('959A0471-2CC8-4E75-A422-97E318E48ACD', 10)
-    print result
+    print(result)
 
 
