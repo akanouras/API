@@ -6,6 +6,7 @@ import datetime
 import json
 import math
 from base64 import standard_b64encode
+import re
 
 try:
     from urllib.request import Request, urlopen
@@ -100,20 +101,14 @@ class VivaPayments(object):
     def _decode(self,json_response):
         obj = json.loads(json_response)
         
-        timestamp=obj['TimeStamp']
+        timestamp = obj['TimeStamp']
 
-        date_tokens =timestamp[0:10].split('-')
-        year = int(date_tokens[0])
-        month = int(date_tokens[1])
-        day = int(date_tokens[2])
+        # This regex takes care of 2 things:
+        # - The fractional part of seconds ends up as integer microseconds (exactly 6 digits)
+        # - The UTC offset becomes +0300 from +03:00, as strptime likes it
+        timestamp_fixed = re.sub(r'\.([0-9]{6})[0-9]*([-+][0-9]{2}):([0-9]{2})$', r'.\1\2\3', timestamp)
 
-        time_tokens =timestamp[11:27].split(':')
-        hour = int(time_tokens[0])
-        minute = int(time_tokens[1])
-        second = int(math.floor(float(time_tokens[2])))
-       
-        # Doesn't add timezone info 
-        obj['TimeStamp'] = datetime.datetime(year,month,day,hour,minute,second)
+        obj['TimeStamp'] = datetime.datetime.strptime(timestamp_fixed, '%Y-%m-%dT%H:%M:%S.%f%z')
 
         return obj
 
